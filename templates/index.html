@@ -10,7 +10,13 @@
 <body>
 
 	<main>
+		<a href="http://10.0.1.61:4000/logout">Logout</a>
+		
 		<form method="POST" enctype="multipart/form-data">
+		<!-- <form method="POST" enctype="multipart/form-data" action="http://10.0.1.61:50000/getData"> -->
+		<!-- Mechanize does not suport JavaScript, therefore neither JQuery AJAX for data sending -->
+		<!-- Attribute 'action' with server address (10.0.1.61) in the <form> tag is required -->
+		
 		<fieldset>
 			<legend>Test de impresión con Flask y Paramiko</legend>
 			

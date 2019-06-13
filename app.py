@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, redirect, request, url_for
 from werkzeug import secure_filename
 #import paramiko
 import os
@@ -11,7 +11,27 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
 def index():
-	return render_template('index.html')
+	#return render_template('index.html')
+    return render_template('login.html')
+    
+
+@app.route('/authUser', methods = ['POST'])
+def auth_user():
+    credentials = open("credentials.txt","r")
+
+    if request.form['username'] == credentials.readline()[:-1] and request.form['password'] == credentials.readline():
+                                        #remove line break (:-1)
+        credentials.close()
+        return render_template('index.html')
+        
+    else:
+        return redirect(url_for('index'))
+        
+
+@app.route('/logout')
+def logout():
+    return redirect(url_for('index'))
+
 	
 @app.route('/getData', methods = ['POST'])
 def get_data():
@@ -61,6 +81,8 @@ def start_printing(filename, nozzle_temp, bed_temp):
 	
 	def print_file():
 		os.system('bash 8print')
+		
+	
 	
 	#Connect printer (execute only once after turning printer on)
 	#connect()
@@ -79,4 +101,4 @@ def start_printing(filename, nozzle_temp, bed_temp):
 
 	
 if __name__ == '__main__':
-	app.run(debug = True, host = '0.0.0.0', port=50000)
+	app.run(debug = True, host = '0.0.0.0', port=4000)
