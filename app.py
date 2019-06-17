@@ -10,27 +10,29 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
-def index():
+def login():
 	#return render_template('index.html')
     return render_template('login.html')
     
 
-@app.route('/authUser', methods = ['POST'])
+@app.route('/main', methods = ['POST'])
 def auth_user():
-    credentials = open("credentials.txt","r")
+    credentials = open("/home/pi/oprint/bin/Tests/OctoFlask/credentials.txt","r") 
+    #Si no pongo la ruta completa, cuando no reinicio el servidor pero vuelvo a ejecutar el script de mechanize,
+    #me da el error FileNotFoundError: [Errno 2] No such file or directory: 'credentials.txt'
 
     if request.form['username'] == credentials.readline()[:-1] and request.form['password'] == credentials.readline():
                                         #remove line break (:-1)
-        credentials.close()
+        #credentials.close()
         return render_template('index.html')
         
     else:
-        return redirect(url_for('index'))
+        return redirect(url_for('login'))
         
 
 @app.route('/logout')
 def logout():
-    return redirect(url_for('index'))
+    return redirect(url_for('login'))
 
 	
 @app.route('/getData', methods = ['POST'])
