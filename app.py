@@ -1,6 +1,5 @@
-from flask import Flask, render_template, redirect, request, url_for
+from flask import Flask, render_template, redirect, request, url_for, session
 from werkzeug import secure_filename
-#import paramiko
 import os
 
 UPLOAD_FOLDER = '/home/pi/.octoprint/uploads'
@@ -8,31 +7,41 @@ UPLOAD_FOLDER = '/home/pi/.octoprint/uploads'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.secret_key = os.urandom(12) #Secret key needed to maintain sessions in Flask (to create a cookie and encode its content)
 
+#Rennder a template depending on whether the user is logged in or not
+#This solved the problem of going back to the index.html after logout, 
+#because both templates are rendered in the same view '/' and cannot 
+#go back to another direction
 @app.route('/')
-def login():
-	#return render_template('index.html')
-    return render_template('login.html')
+def index():
+    if 'username' and 'password' not in session:
+        return render_template('login.html')
+    else:
+        return render_template('index.html')
     
 
-@app.route('/main', methods = ['POST'])
-def auth_user():
+@app.route('/auth', methods = ['POST'])
+def auth():
     credentials = open("/home/pi/oprint/bin/Tests/OctoFlask/credentials.txt","r") 
     #Si no pongo la ruta completa, cuando no reinicio el servidor pero vuelvo a ejecutar el script de mechanize,
     #me da el error FileNotFoundError: [Errno 2] No such file or directory: 'credentials.txt'
 
     if request.form['username'] == credentials.readline()[:-1] and request.form['password'] == credentials.readline():
                                         #remove line break (:-1)
-        #credentials.close()
-        return render_template('index.html')
         
-    else:
-        return redirect(url_for('login'))
+        session['username'] = request.form['username']
+        session['password'] = request.form['password']
+        credentials.close()
+    
+    return redirect(url_for('index'))
         
 
 @app.route('/logout')
 def logout():
-    return redirect(url_for('login'))
+    session.pop('username', None)
+    session.pop('password', None)
+    return redirect(url_for('index'))
 
 	
 @app.route('/getData', methods = ['POST'])
