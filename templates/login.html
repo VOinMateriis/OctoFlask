@@ -2,6 +2,9 @@
 <html>
 <head>
 	<meta charset = "UTF-8">
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="../static/js/jquery-3.3.1.js"></script> <!-- fallback -->
 </head>
 
 <body>
@@ -15,8 +18,20 @@
 		<input type="password" id="pssw" name="password" required>
 		
 		<input type="submit" value="Login">
+		
+		{% if error %}
+			<p>Datos incorrectos</p>
+		{% endif %}
 	</form>
 </main>
 
+<script type="text/javascript">
+	$(document).ready(function(){
+		
+		$("input").focus(function(){
+			$("form")[0].removeChild($("p")[0]);
+		});
+	});
+</script>
 </body>
 </html>

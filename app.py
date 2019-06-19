@@ -9,20 +9,30 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.urandom(12) #Secret key needed to maintain sessions in Flask (to create a cookie and encode its content)
 
+error = None
+invalid_format = None
+
 #Rennder a template depending on whether the user is logged in or not
 #This solved the problem of going back to the index.html after logout, 
 #because both templates are rendered in the same view '/' and cannot 
 #go back to another direction
 @app.route('/')
 def index():
-    if 'username' and 'password' not in session:
-        return render_template('login.html')
-    else:
-        return render_template('index.html')
+    global error
+    global invalid_format
     
+    if 'username' and 'password' not in session:
+        return render_template('login.html', error = error)
+    else:
+        return render_template('index.html', error = invalid_format)
+    
+    return ''
+
 
 @app.route('/auth', methods = ['POST'])
 def auth():
+    global error
+    
     credentials = open("/home/pi/oprint/bin/Tests/OctoFlask/credentials.txt","r") 
     #Si no pongo la ruta completa, cuando no reinicio el servidor pero vuelvo a ejecutar el script de mechanize,
     #me da el error FileNotFoundError: [Errno 2] No such file or directory: 'credentials.txt'
@@ -32,8 +42,11 @@ def auth():
         
         session['username'] = request.form['username']
         session['password'] = request.form['password']
-        credentials.close()
+        error = False
+    else:
+        error = True
     
+    credentials.close()
     return redirect(url_for('index'))
         
 
@@ -46,25 +59,36 @@ def logout():
 	
 @app.route('/getData', methods = ['POST'])
 def get_data():
-	
-	#FORM DATA REQUEST
-	data = request.form #Get text-box inputs from front-end
-	print(data)
-	
-	nozzle = data["nozzle_temp"]
-	bed = data["bed_temp"]
+    global invalid_format
+    
+    #FORM DATA REQUEST
+    data = request.form #Get text-box inputs from front-end
+    print(data)
 
-	#FILE UPLOADING
-	f = request.files['file']
-	filename = secure_filename(f.filename)
-	print(filename)
-	f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-	print(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-	
-	start_printing(filename, nozzle, bed)
-	print("olakase")
-	
-	return ''
+    nozzle = data["nozzle_temp"]
+    bed = data["bed_temp"]
+    
+    
+    #FILE UPLOADING
+    f = request.files['file']
+    filename = secure_filename(f.filename)
+    print(filename)
+    
+    #FILE FORMAT VALIDATION
+    if filename.endswith(".gcode"):
+        f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        print(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        start_printing(filename, nozzle, bed)
+        print("olakase")
+        
+        invalid_format = False
+        
+    else:
+        print("INVALID FILE FORMAT")
+        invalid_format = True
+        
+    return redirect(url_for('index'))
 	
 def start_printing(filename, nozzle_temp, bed_temp):
 
